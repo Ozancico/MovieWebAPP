@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Movies - MovieWeb App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Movie List</h1>
+        {% if movies %}
+        <table>
+            <tr>
+                <th>Title</th>
+                <th>Director</th>
+                <th>Year</th>
+                <th>Rating</th>
+                <th>Actions</th>
+            </tr>
+            {% for movie in movies %}
+            <tr>
+                <td>{{ movie.name }}</td>
+                <td>{{ movie.director }}</td>
+                <td>{{ movie.year }}</td>
+                <td>{{ movie.rating }}</td>
+                <td>
+                    <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">Edit</a> |
+                    <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" onclick="return confirm('Are you sure?')">Delete</a> |
+                    <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}">Show Reviews</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No movies available.</p>
+        {% endif %}
+
+        <p><a href="{{ url_for('add_movie', user_id=user_id) }}">Add New Movie</a></p>
+        <p><a href="{{ url_for('list_users') }}">Back to User List</a></p>
+    </div>
+</body>
+</html>
