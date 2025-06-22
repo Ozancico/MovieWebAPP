@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datamanager.sqlite_data_manager import SQLiteDataManager
 import requests
+import os
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 data_manager = SQLiteDataManager('moviwebapp.db')
+load_dotenv()
 
 @app.route('/')
 def home():
@@ -55,7 +58,7 @@ def add_movie(user_id):
             if 'fetch_omdb' in request.form or 'fetch_omdb_flag' in request.form:
                 # OMDb-API Call
                 title = request.form['name']
-                api_key = 'bfefad64'  # REAL API-KEY
+                api_key = os.getenv('OMDB_API_KEY')
                 url = f'http://www.omdbapi.com/?t={title}&apikey={api_key}&type=movie&plot=short&r=json'
                 response = requests.get(url)
                 if response.status_code == 200:
