@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Movie - MovieWeb App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h1>Edit Movie</h1>
+    <form method="post">
+        <input type="hidden" name="user_id" value="{{ movie.user_id }}">
+        <div>
+            <label for="name">Movie Title:</label>
+            <input type="text" id="name" name="name" value="{{ movie.name }}" required>
+        </div>
+        <div>
+            <label for="director">Regie:</label>
+            <input type="text" id="director" name="director" value="{{ movie.director }}" required>
+        </div>
+        <div>
+            <label for="year">Year:</label>
+            <input type="number" id="year" name="year" value="{{ movie.year }}" required min="1900" max="2099">
+        </div>
+        <div>
+            <label for="rating">Rating:</label>
+            <input type="number" id="rating" name="rating" value="{{ movie.rating }}" required min="0" max="10" step="0.1">
+        </div>
+        <button type="submit">Update Movie</button>
+    </form>
+    <p><a href="{{ url_for('user_movies', user_id=movie.user_id) }}">Back to Movie List</a></p>
+</div>
+</body>
+</html>
