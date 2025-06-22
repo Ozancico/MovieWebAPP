@@ -1,47 +1,47 @@
 # MovieWebAPP
 
-MovieWebAPP ist eine moderne Webanwendung zur Verwaltung von Filmen, Nutzern und Bewertungen. Die App bietet eine intuitive Benutzeroberfläche und nutzt aktuelle Webtechnologien für ein ansprechendes Nutzererlebnis.
+MovieWebAPP is a modern web application for managing movies, users, and reviews. The app offers an intuitive user interface and leverages up-to-date web technologies for an appealing user experience.
 
 ## Features
-- **Benutzerverwaltung:** Nutzer können einfach hinzugefügt und verwaltet werden.
-- **Filmliste:** Jeder Nutzer kann seine eigene Filmliste anlegen, bearbeiten und löschen.
-- **Filmdetails & OMDb-Integration:** Neue Filme können manuell oder automatisch über die OMDb-API hinzugefügt werden. Die wichtigsten Filmdaten werden dabei automatisch übernommen.
-- **Bewertungen:** Nutzer können Filme bewerten und Rezensionen verfassen. Alle Bewertungen sind übersichtlich einsehbar.
-- **Responsives Design:** Die App ist für Desktop und mobile Geräte optimiert und verwendet ein modernes, ansprechendes CSS-Design.
+- **User Management:** Easily add and manage users.
+- **Movie List:** Each user can create, edit, and delete their own movie list.
+- **Movie Details & OMDb Integration:** Add new movies manually or automatically via the OMDb API. Key movie data is fetched automatically.
+- **Reviews:** Users can rate movies and write reviews. All reviews are clearly displayed.
+- **Responsive Design:** The app is optimized for desktop and mobile devices and uses a modern, attractive CSS design.
 
-## Technologie-Stack
+## Technology Stack
 - **Backend:** Python 3, Flask, SQLAlchemy (SQLite)
-- **Frontend:** HTML5, CSS3 (modernes, responsives Design)
-- **API:** OMDb API für Filmdaten
+- **Frontend:** HTML5, CSS3 (modern, responsive design)
+- **API:** OMDb API for movie data
 
-## Schnellstart
-1. **Repository klonen:**
+## Quickstart
+1. **Clone the repository:**
    ```bash
    git clone <repo-url>
    cd MovieWebAPP
    ```
-2. **Abhängigkeiten installieren:**
+2. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
-3. **App starten:**
+3. **Start the app:**
    ```bash
    python app.py
    ```
-4. **Im Browser öffnen:**
+4. **Open in your browser:**
    [http://localhost:5000](http://localhost:5000)
 
-## Projektstruktur
-- `app.py` – Hauptanwendung (Flask)
-- `datamanager/` – Datenzugriffsschicht (SQLAlchemy)
-- `templates/` – HTML-Templates (Jinja2)
-- `static/` – Statische Dateien (CSS)
+## Project Structure
+- `app.py` – Main application (Flask)
+- `datamanager/` – Data access layer (SQLAlchemy)
+- `templates/` – HTML templates (Jinja2)
+- `static/` – Static files (CSS)
 
 ## Screenshots
-*Füge hier Screenshots deiner App ein, um das Design und die Funktionen zu zeigen.*
+*Add screenshots of your app here to showcase the design and features.*
 
-## Lizenz
+## License
 MIT License
 
 ---
-**MovieWebAPP** – Dein moderner Begleiter für Filmverwaltung und Bewertungen!
+**MovieWebAPP** – Your modern companion for movie management and reviews!
