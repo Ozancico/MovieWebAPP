@@ -31,8 +31,7 @@
         <p>No reviews yet for this movie.</p>
     {% endif %}
     <a href="{{ url_for('add_review', movie_id=movie_id) }}">Add Review</a> |
-    <a href="{{ url_for('user_movies', user_id=reviews[0].user_id if reviews else 1) }}">Back to Movies</a>
+    <a href="{{ url_for('user_movies', user_id=reviews[0].user_id if reviews else 1) }}">Back to Movie List</a>
 </div>
 </body>
 </html>
-
