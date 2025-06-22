@@ -6,14 +6,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="text-align: center;">
         <h1>Welcome to MovieWeb App</h1>
-        <nav>
-            <ul>
-                <li><a href="/users">User List</a></li>
-                <li><a href="/add_user">Add New User</a></li>
-            </ul>
+        <nav style="display: flex; justify-content: space-between; margin: 2em 0;">
+            <a href="/users" class="btn-action">User List</a>
+            <a href="/add_user" class="btn-action">Add New User</a>
         </nav>
+        {% if omdb_movies %}
+        <h2 style="margin-top: 2em;">Top-Rated & Trending Movies (OMDb Suggestions)</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2em;">
+            {% for movie in omdb_movies %}
+                <div style="flex: 0 1 calc(33.333% - 2em); max-width: 340px; min-width: 220px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); margin-bottom: 2em; padding: 1.2em 1em; display: flex; flex-direction: column; align-items: center; min-height: 520px; justify-content: space-between;">
+                    {% if movie.poster and movie.poster != 'N/A' %}
+                        <img src="{{ movie.poster }}" alt="Poster" style="width: 100%; max-width: 180px; height: 270px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-bottom: 1em;">
+                    {% endif %}
+                    <div style="font-size: 1.15em; font-weight: 700; margin-bottom: 0.3em; color: #2980b9; min-height: 2.6em; display: flex; align-items: center; text-align: center; word-break: break-word;">{{ movie.name }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Director: {{ movie.director }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Year: {{ movie.year }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.7em; color: #555;">Rating: {{ movie.rating }}</div>
+                    <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; align-items: flex-end; gap: 0.5em; margin-top: auto;">
+                        <form method="post" action="/users/1/add_movie" style="display: flex; flex-direction: row; align-items: flex-end; gap: 0.5em; width: 100%;">
+                            <select name="user_id" required style="padding: 0.2em 0.5em; border-radius: 5px; width: 60%; min-width: 90px;">
+                                <option value="" disabled selected>Select user</option>
+                                {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="hidden" name="name" value="{{ movie.name }}">
+                            <input type="hidden" name="director" value="{{ movie.director }}">
+                            <input type="hidden" name="year" value="{{ movie.year }}">
+                            <input type="hidden" name="rating" value="{{ movie.rating }}">
+                            <button type="submit" class="btn-action movie-action" style="min-width: 70px; padding: 0.3em 1em; font-size: 0.95em;">Add</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div style="margin: 2em 0; display: flex; flex-direction: column; align-items: center; gap: 0.7em;">
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1.5em;">
+                {% if page > 1 %}
+                    <a href="/?page={{ page-1 }}" class="btn-action" style="min-width: 70px; padding: 0.3em 0.7em; font-size: 0.95em;">&laquo; Back</a>
+                {% endif %}
+                {% if page < total_pages %}
+                    <a href="/?page={{ page+1 }}" class="btn-action" style="min-width: 70px; padding: 0.3em 0.7em; font-size: 0.95em;">Next &raquo;</a>
+                {% endif %}
+            </div>
+            <div style="margin-top: 0.5em; font-size: 1.08em; color: #22304a;">
+                {{ page }}/{{ total_pages }}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

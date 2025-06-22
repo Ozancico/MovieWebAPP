@@ -11,9 +11,58 @@ load_dotenv()
 @app.route('/')
 def home():
     """
-    Render the home page of the MovieWeb App.
+    Zeigt die Startseite mit OMDb Top-Rated/Trending Filmen (10 pro Seite, Pagination, 10 Seiten).
     """
-    return render_template('home.html')
+    import math
+    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
+    page = int(request.args.get('page', 1))
+    users = data_manager.get_all_users()
+    # 100 beliebte Filme (Beispiel-Liste, kann beliebig erweitert werden)
+    trending_titles = [
+        'The Shawshank Redemption', 'The Godfather', 'The Dark Knight', 'Pulp Fiction',
+        'Forrest Gump', 'Inception', 'Fight Club', 'The Matrix', 'Goodfellas', 'The Lord of the Rings: The Return of the King',
+        'Interstellar', 'Se7en', 'The Silence of the Lambs', 'The Green Mile', 'Gladiator',
+        'The Prestige', 'The Departed', 'Whiplash', 'The Lion King', 'The Usual Suspects',
+        'Saving Private Ryan', 'Parasite', 'Joker', 'Avengers: Endgame', 'Back to the Future',
+        'The Pianist', 'Spirited Away', 'The Intouchables', 'The Wolf of Wall Street', 'Django Unchained',
+        'Memento', 'The Truman Show', 'The Grand Budapest Hotel', 'La La Land', 'The Social Network',
+        'The Imitation Game', 'The Revenant', 'Mad Max: Fury Road', 'The Hateful Eight', 'Birdman',
+        'Room', 'Spotlight', 'Moonlight', 'Arrival', 'Blade Runner 2049', 'Logan', 'Get Out',
+        'Three Billboards Outside Ebbing, Missouri', 'Lady Bird', 'Call Me by Your Name', 'Coco',
+        'A Star Is Born', 'Bohemian Rhapsody', 'Green Book', 'Roma', 'Once Upon a Time in Hollywood',
+        'Joker', '1917', 'Knives Out', 'Jojo Rabbit', 'Parasite', 'Ford v Ferrari', 'Marriage Story',
+        'Little Women', 'The Irishman', 'Soul', 'Tenet', 'Minari', 'Nomadland', 'Promising Young Woman',
+        'Sound of Metal', 'The Father', 'Another Round', 'The Trial of the Chicago 7', 'Palm Springs',
+        'The Invisible Man', 'Hamilton', 'Enola Holmes', 'The Midnight Sky', 'News of the World',
+        'The Dig', 'The White Tiger', 'Malcolm & Marie', 'The Mauritanian', 'The Mitchells vs. the Machines',
+        'Luca', 'No Time to Die', 'Dune', 'The French Dispatch', 'King Richard', 'West Side Story',
+        'Don’t Look Up', 'The Power of the Dog', 'Drive My Car', 'Belfast', 'CODA', 'Licorice Pizza',
+        'Nightmare Alley', 'The Lost Daughter', 'Tick, Tick... Boom!', 'The Hand of God', 'The Worst Person in the World'
+    ]
+    per_page = 12
+    total_pages = math.ceil(len(trending_titles) / per_page)
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_titles = trending_titles[start:end]
+    omdb_movies = []
+    for title in page_titles:
+        url = f'http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get('Response') == 'True':
+                    omdb_movies.append({
+                        'name': data.get('Title', ''),
+                        'director': data.get('Director', ''),
+                        'year': data.get('Year', ''),
+                        'rating': data.get('imdbRating', ''),
+                        'poster': data.get('Poster', ''),
+                        'omdb_id': data.get('imdbID', '')
+                    })
+        except Exception:
+            pass
+    return render_template('home.html', omdb_movies=omdb_movies, users=users, page=page, total_pages=total_pages)
 
 @app.route('/users')
 def list_users():

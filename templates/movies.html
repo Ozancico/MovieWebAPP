@@ -6,27 +6,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="text-align: center;">
         <h1>Movie List</h1>
+        <nav style="display: flex; justify-content: space-between; margin: 2em 0;">
+            <a href="/users" class="btn-action">Back to User List</a>
+            <a href="{{ url_for('add_movie', user_id=user_id) }}" class="btn-action">Add New Movie</a>
+        </nav>
         {% if movies %}
-        <table>
+        <table style="margin: 0 auto; text-align: center; width: 80%;">
             <tr>
-                <th>Title</th>
-                <th>Director</th>
-                <th>Year</th>
-                <th>Rating</th>
-                <th>Actions</th>
+                <th style="text-align: center; width: 25%;">Title</th>
+                <th style="text-align: center; width: 25%;">Director</th>
+                <th style="text-align: center; width: 25%;">Year</th>
+                <th style="text-align: center; width: 25%;">Rating</th>
             </tr>
             {% for movie in movies %}
             <tr>
-                <td>{{ movie.name }}</td>
-                <td>{{ movie.director }}</td>
-                <td>{{ movie.year }}</td>
-                <td>{{ movie.rating }}</td>
-                <td>
-                    <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">Edit</a> |
-                    <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" onclick="return confirm('Are you sure?')">Delete</a> |
-                    <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}">Show Reviews</a>
+                <td style="text-align: center; vertical-align: middle;">{{ movie.name }}</td>
+                <td style="text-align: center; vertical-align: middle;">{{ movie.director }}</td>
+                <td style="text-align: center; vertical-align: middle;">{{ movie.year }}</td>
+                <td style="text-align: center; vertical-align: middle;">{{ movie.rating }}</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding-bottom: 1.5em;">
+                    <div style="display: flex; justify-content: center; gap: 1em;">
+                        <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action">Edit</a>
+                        <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" class="btn-action movie-action">Show Reviews</a>
+                    </div>
                 </td>
             </tr>
             {% endfor %}
@@ -34,9 +41,6 @@
         {% else %}
         <p>No movies available.</p>
         {% endif %}
-
-        <p><a href="{{ url_for('add_movie', user_id=user_id) }}">Add New Movie</a></p>
-        <p><a href="{{ url_for('list_users') }}">Back to User List</a></p>
     </div>
 </body>
 </html>

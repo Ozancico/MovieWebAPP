@@ -2,21 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Users - MovieWeb App</title>
+    <title>User List - MovieWeb App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h1>Users</h1>
-        <ul>
+    <div class="container" style="text-align: center;">
+        <h1>User List</h1>
+        <nav style="display: flex; justify-content: space-between; margin: 2em 0;">
+            <a href="/" class="btn-action">Home</a>
+            <a href="/add_user" class="btn-action">Add New User</a>
+        </nav>
+        {% if users %}
+        <table style="margin: 0 auto;">
+            <tr>
+                <th>Name</th>
+                <th>Aktionen</th>
+            </tr>
             {% for user in users %}
-                <li>
-                    <a href="{{ url_for('user_movies', user_id=user.id) }}">{{ user.name }}</a>
-                </li>
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>
+                    <a href="/users/{{ user.id }}" class="btn-action">Show Movies</a>
+                </td>
+            </tr>
             {% endfor %}
-        </ul>
-        <p><a href="{{ url_for('add_user') }}">Add New User</a></p>
-        <p><a href="{{ url_for('home') }}">Back to Home</a></p>
+        </table>
+        {% else %}
+        <p>No users available.</p>
+        {% endif %}
     </div>
 </body>
 </html>
