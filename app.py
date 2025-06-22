@@ -65,7 +65,8 @@ def add_movie(user_id):
                             'name': data.get('Title', ''),
                             'director': data.get('Director', ''),
                             'year': int(data.get('Year', 0)) if data.get('Year', '').isdigit() else '',
-                            'rating': float(data.get('imdbRating', 0)) if data.get('imdbRating', '0').replace('.', '', 1).isdigit() else ''
+                            'rating': float(data.get('imdbRating', 0)) if data.get('imdbRating', '0').replace('.', '', 1).isdigit() else '',
+                            'poster': data.get('Poster', '')
                         }
                     else:
                         error = 'Movie not found!'

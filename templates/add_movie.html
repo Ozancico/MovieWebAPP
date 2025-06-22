@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Movie - MovieWeb App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+    // Best-practice: Only validate required fields on 'Add Movie', not on 'Fetch from OMDb'
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const fetchBtn = document.querySelector('button[name="fetch_omdb"]');
+        if (fetchBtn) {
+            fetchBtn.addEventListener('click', function(e) {
+                // Remove required attributes temporarily
+                const requiredFields = form.querySelectorAll('[required]');
+                requiredFields.forEach(f => f.removeAttribute('required'));
+                // Set a hidden field to indicate OMDb fetch
+                let hidden = form.querySelector('input[name="fetch_omdb_flag"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'fetch_omdb_flag';
+                    hidden.value = '1';
+                    form.appendChild(hidden);
+                }
+                // Submit the form
+                form.submit();
+                // Restore required attributes after submit (for next time)
+                setTimeout(() => requiredFields.forEach(f => f.setAttribute('required', 'required')), 100);
+                e.preventDefault();
+            });
+        }
+    });
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Add New Movie</h1>
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="post" style="display: flex; gap: 2em; align-items: flex-start;">
+        <div style="flex: 1;">
+            <div>
+                <label for="name">Movie Title:</label>
+                <input type="text" id="name" name="name" value="{{ omdb_data.name if omdb_data else request.form.get('name', '') }}" required>
+            </div>
+            <div>
+                <label for="director">Regie:</label>
+                <input type="text" id="director" name="director" value="{{ omdb_data.director if omdb_data else request.form.get('director', '') }}" required>
+                {% if omdb_data is not none and (omdb_data.director is none or omdb_data.director == '') %}
+                    <div class="error">No director found from OMDb. Please enter the director manually.</div>
+                {% endif %}
+            </div>
+            <div>
+                <label for="year">Year:</label>
+                <input type="number" id="year" name="year" value="{{ omdb_data.year if omdb_data else request.form.get('year', '') }}" required min="1900" max="2099">
+            </div>
+            <div>
+                <label for="rating">Rating:</label>
+                <input type="number" id="rating" name="rating" value="{{ omdb_data.rating if omdb_data else request.form.get('rating', '') }}" required min="0" max="10" step="0.1">
+            </div>
+            <button type="submit" name="add_movie">Add Movie</button>
+            <button type="submit" name="fetch_omdb">Fetch from OMDb</button>
+        </div>
+        {% if omdb_data and omdb_data.poster %}
+        <div class="movie-cover-box" style="flex: 0 0 180px; text-align: center;">
+            <label>Filmcover:</label><br>
+            <img src="{{ omdb_data.poster }}" alt="Movie Cover" class="movie-cover-img" style="max-width: 160px; max-height: 240px; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-top: 0.5em;">
+        </div>
+        {% endif %}
+    </form>
+    <p><a href="{{ url_for('user_movies', user_id=user_id) }}">Back to Movie List</a></p>
+</div>
+</body>
+</html>
