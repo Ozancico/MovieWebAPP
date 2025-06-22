@@ -52,7 +52,7 @@ def add_movie(user_id):
     error = None
     try:
         if request.method == 'POST':
-            if 'fetch_omdb' in request.form:
+            if 'fetch_omdb' in request.form or 'fetch_omdb_flag' in request.form:
                 # OMDb-API Call
                 title = request.form['name']
                 api_key = 'bfefad64'  # REAL API-KEY
@@ -73,12 +73,23 @@ def add_movie(user_id):
                     error = 'Error with OMDb request.'
                 return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
             else:
-                # Save movie
+                # Validate year and rating fields
+                year = request.form['year']
+                rating = request.form['rating']
+                if not year or not rating:
+                    error = 'Year and rating fields must not be empty.'
+                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
+                try:
+                    year = int(year)
+                    rating = float(rating)
+                except ValueError:
+                    error = 'Year must be an integer and rating must be a number.'
+                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
                 movie = {
                     'name': request.form['name'],
                     'director': request.form['director'],
-                    'year': int(request.form['year']),
-                    'rating': float(request.form['rating']),
+                    'year': year,
+                    'rating': rating,
                     'user_id': user_id
                 }
                 data_manager.add_movie(movie)
