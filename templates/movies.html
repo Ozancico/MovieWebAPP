@@ -13,31 +13,25 @@
             <a href="{{ url_for('add_movie', user_id=user_id) }}" class="btn-action">Add New Movie</a>
         </nav>
         {% if movies %}
-        <table style="margin: 0 auto; text-align: center; width: 80%;">
-            <tr>
-                <th style="text-align: center; width: 25%;">Title</th>
-                <th style="text-align: center; width: 25%;">Director</th>
-                <th style="text-align: center; width: 25%;">Year</th>
-                <th style="text-align: center; width: 25%;">Rating</th>
-            </tr>
+        <h2 style="margin-top: 2em;">Your Movies</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2em;">
             {% for movie in movies %}
-            <tr>
-                <td style="text-align: center; vertical-align: middle;">{{ movie.name }}</td>
-                <td style="text-align: center; vertical-align: middle;">{{ movie.director }}</td>
-                <td style="text-align: center; vertical-align: middle;">{{ movie.year }}</td>
-                <td style="text-align: center; vertical-align: middle;">{{ movie.rating }}</td>
-            </tr>
-            <tr>
-                <td colspan="4" style="padding-bottom: 1.5em;">
-                    <div style="display: flex; justify-content: center; gap: 1em;">
-                        <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action">Edit</a>
-                        <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" onclick="return confirm('Are you sure?')">Delete</a>
-                        <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" class="btn-action movie-action">Show Reviews</a>
+                <div style="flex: 0 1 calc(33.333% - 2em); max-width: 340px; min-width: 220px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); margin-bottom: 2em; padding: 1.2em 1em; display: flex; flex-direction: column; align-items: center; min-height: 520px; justify-content: space-between;">
+                    {% if movie.poster and movie.poster != 'N/A' %}
+                        <img src="{{ movie.poster }}" alt="Poster" style="width: 100%; max-width: 180px; height: 270px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-bottom: 1em;">
+                    {% endif %}
+                    <div style="font-size: 1.15em; font-weight: 700; margin-bottom: 0.3em; color: #2980b9; min-height: 2.6em; display: flex; align-items: center; text-align: center; word-break: break-word;">{{ movie.name }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Director: {{ movie.director }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Year: {{ movie.year }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.7em; color: #555;">Rating: {{ movie.rating }}</div>
+                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.5em; margin-top: auto;">
+                        <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;">Edit</a>
+                        <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;">Show Reviews</a>
                     </div>
-                </td>
-            </tr>
+                </div>
             {% endfor %}
-        </table>
+        </div>
         {% else %}
         <p>No movies available.</p>
         {% endif %}

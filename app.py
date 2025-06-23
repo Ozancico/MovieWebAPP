@@ -75,12 +75,40 @@ def list_users():
 @app.route('/users/<int:user_id>')
 def user_movies(user_id):
     """
-    Display a list of movies for a specific user.
-    Args:
-        user_id (int): The ID of the user.
+    Zeigt die Movie-Liste eines Users mit OMDb-Infos (Poster etc.) wie auf der Startseite.
     """
+    import os
+    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
     movies = data_manager.get_user_movies(user_id)
-    return render_template('movies.html', movies=movies, user_id=user_id)
+    movies_with_omdb = []
+    for movie in movies:
+        poster = ''
+        director = movie.director
+        year = movie.year
+        rating = movie.rating
+        # OMDb-Infos holen (nur wenn Titel vorhanden)
+        if movie.name:
+            url = f'http://www.omdbapi.com/?t={movie.name}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
+            try:
+                r = requests.get(url)
+                if r.status_code == 200:
+                    data = r.json()
+                    if data.get('Response') == 'True':
+                        poster = data.get('Poster', '')
+                        director = data.get('Director', director)
+                        year = data.get('Year', year)
+                        rating = data.get('imdbRating', rating)
+            except Exception:
+                pass
+        movies_with_omdb.append({
+            'id': movie.id,
+            'name': movie.name,
+            'director': director,
+            'year': year,
+            'rating': rating,
+            'poster': poster
+        })
+    return render_template('movies.html', movies=movies_with_omdb, user_id=user_id)
 
 @app.route('/add_user', methods=['GET', 'POST'])
 def add_user():
@@ -164,6 +192,19 @@ def update_movie(user_id, movie_id):
     movie = next((m for m in movies if m.id == movie_id), None)
     if not movie:
         return redirect(url_for('user_movies', user_id=user_id))
+    poster_url = None
+    # OMDb-Poster holen
+    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
+    if movie and movie.name:
+        url = f'http://www.omdbapi.com/?t={movie.name}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get('Response') == 'True':
+                    poster_url = data.get('Poster', None)
+        except Exception:
+            pass
     if request.method == 'POST':
         updated_movie = {
             'id': movie_id,
@@ -174,7 +215,10 @@ def update_movie(user_id, movie_id):
         }
         data_manager.update_movie(updated_movie)
         return redirect(url_for('user_movies', user_id=user_id))
-    return render_template('edit_movie.html', movie=movie)
+    # movie als dict, damit .poster im Template funktioniert
+    movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
+    movie_dict['poster'] = poster_url
+    return render_template('edit_movie.html', movie=movie_dict)
 
 @app.route('/users/<int:user_id>/delete_movie/<int:movie_id>')
 def delete_movie(user_id, movie_id):

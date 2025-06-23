@@ -18,7 +18,7 @@ h1, h2, h3 {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1300px;
     margin: 2em auto;
     background: linear-gradient(120deg, #ffffff 80%, #eaf6fb 100%);
     padding: 2em;
