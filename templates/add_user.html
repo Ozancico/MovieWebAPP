@@ -15,7 +15,9 @@
         </div>
         <button type="submit" class="btn-action movie-action" style="width: 100%; max-width: 180px; margin: 0 auto; display: block; box-shadow: 0 4px 18px 0 rgba(41,128,185,0.10); border-radius: 7px; border: none;">Add User</button>
     </form>
-    <p style="margin-top: 1.5em;"><a href="{{ url_for('list_users') }}">Back to User List</a></p>
+    <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+        <a href="{{ back_url }}" class="btn-action" style="max-width: 180px; display: inline-block; margin: 1.5em auto 0 auto;">Back Home</a>
+    </div>
 </div>
 </body>
 </html>

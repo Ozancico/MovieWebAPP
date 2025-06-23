@@ -1,12 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from datamanager.sqlite_data_manager import SQLiteDataManager
 import requests
 import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
 data_manager = SQLiteDataManager('moviwebapp.db')
 load_dotenv()
+
+@app.before_request
+def store_referrer():
+    # Speichere die vorherige Seite, außer bei statischen Dateien und POST-Requests
+    if request.method == 'GET' and not request.path.startswith('/static'):
+        session['last_url'] = request.referrer if request.referrer else url_for('home')
 
 @app.route('/')
 def home():
@@ -118,8 +125,10 @@ def add_user():
     if request.method == 'POST':
         name = request.form['name']
         data_manager.add_user({'name': name})
-        return redirect(url_for('list_users'))
-    return render_template('add_user.html')
+        back_url = request.args.get('back') or session.get('last_url') or url_for('list_users')
+        return redirect(back_url)
+    back_url = request.args.get('back') or session.get('last_url') or url_for('list_users')
+    return render_template('add_user.html', back_url=back_url)
 
 @app.route('/users/<int:user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
@@ -130,6 +139,7 @@ def add_movie(user_id):
     """
     omdb_data = None
     error = None
+    back_url = request.args.get('back') or session.get('last_url') or url_for('user_movies', user_id=user_id)
     try:
         if request.method == 'POST':
             if 'fetch_omdb' in request.form or 'fetch_omdb_flag' in request.form:
@@ -152,20 +162,20 @@ def add_movie(user_id):
                         error = 'Movie not found!'
                 else:
                     error = 'Error with OMDb request.'
-                return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
+                return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
             else:
                 # Validate year and rating fields
                 year = request.form['year']
                 rating = request.form['rating']
                 if not year or not rating:
                     error = 'Year and rating fields must not be empty.'
-                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
+                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
                 try:
                     year = int(year)
                     rating = float(rating)
                 except ValueError:
                     error = 'Year must be an integer and rating must be a number.'
-                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
+                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
                 movie = {
                     'name': request.form['name'],
                     'director': request.form['director'],
@@ -177,8 +187,8 @@ def add_movie(user_id):
                 return redirect(url_for('user_movies', user_id=user_id))
     except Exception as ex:
         error = f'Error: {str(ex)}'
-        return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
-    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error)
+        return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
+    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
 
 @app.route('/users/<int:user_id>/update_movie/<int:movie_id>', methods=['GET', 'POST'])
 def update_movie(user_id, movie_id):
@@ -190,6 +200,7 @@ def update_movie(user_id, movie_id):
     """
     movies = data_manager.get_user_movies(user_id)
     movie = next((m for m in movies if m.id == movie_id), None)
+    back_url = request.args.get('back') or session.get('last_url') or url_for('user_movies', user_id=user_id)
     if not movie:
         return redirect(url_for('user_movies', user_id=user_id))
     poster_url = None
@@ -218,7 +229,7 @@ def update_movie(user_id, movie_id):
     # movie als dict, damit .poster im Template funktioniert
     movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
     movie_dict['poster'] = poster_url
-    return render_template('edit_movie.html', movie=movie_dict)
+    return render_template('edit_movie.html', movie=movie_dict, back_url=back_url)
 
 @app.route('/users/<int:user_id>/delete_movie/<int:movie_id>')
 def delete_movie(user_id, movie_id):
@@ -249,6 +260,7 @@ def add_review(movie_id):
         movie_id (int): The ID of the movie.
     """
     error = None
+    back_url = request.args.get('back') or session.get('last_url') or url_for('movie_reviews', movie_id=movie_id)
     if request.method == 'POST':
         try:
             user_id = int(request.form['user_id'])
@@ -264,7 +276,7 @@ def add_review(movie_id):
         except Exception as ex:
             error = f'Error: {str(ex)}'
     users = data_manager.get_all_users()
-    return render_template('add_review.html', movie_id=movie_id, users=users, error=error)
+    return render_template('add_review.html', movie_id=movie_id, users=users, error=error, back_url=back_url)
 
 @app.errorhandler(404)
 def page_not_found(e):
