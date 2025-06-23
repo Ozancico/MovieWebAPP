@@ -4,6 +4,7 @@ class DataManagerInterface(ABC):
     """
     Interface for data management classes. Defines the required methods for any data manager implementation.
     """
+
     @abstractmethod
     def get_all_users(self):
         """

@@ -11,20 +11,21 @@ load_dotenv()
 
 @app.before_request
 def store_referrer():
-    # Speichere die vorherige Seite, außer bei statischen Dateien und POST-Requests
+    """
+    Store the previous page in the session, except for static files and POST requests.
+    """
     if request.method == 'GET' and not request.path.startswith('/static'):
         session['last_url'] = request.referrer if request.referrer else url_for('home')
 
 @app.route('/')
 def home():
     """
-    Zeigt die Startseite mit OMDb Top-Rated/Trending Filmen (10 pro Seite, Pagination, 10 Seiten).
+    Show the homepage with OMDb top-rated/trending movies (10 per page, pagination, 10 pages).
     """
     import math
     OMDB_API_KEY = os.getenv('OMDB_API_KEY')
     page = int(request.args.get('page', 1))
     users = data_manager.get_all_users()
-    # 100 beliebte Filme (Beispiel-Liste, kann beliebig erweitert werden)
     trending_titles = [
         'The Shawshank Redemption', 'The Godfather', 'The Dark Knight', 'Pulp Fiction',
         'Forrest Gump', 'Inception', 'Fight Club', 'The Matrix', 'Goodfellas', 'The Lord of the Rings: The Return of the King',
@@ -82,7 +83,7 @@ def list_users():
 @app.route('/users/<int:user_id>')
 def user_movies(user_id):
     """
-    Zeigt die Movie-Liste eines Users mit OMDb-Infos (Poster etc.) wie auf der Startseite.
+    Show the movie list of a user with OMDb info (poster, etc.) as on the homepage.
     """
     import os
     OMDB_API_KEY = os.getenv('OMDB_API_KEY')
@@ -93,7 +94,6 @@ def user_movies(user_id):
         director = movie.director
         year = movie.year
         rating = movie.rating
-        # OMDb-Infos holen (nur wenn Titel vorhanden)
         if movie.name:
             url = f'http://www.omdbapi.com/?t={movie.name}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
             try:
@@ -143,7 +143,6 @@ def add_movie(user_id):
     try:
         if request.method == 'POST':
             if 'fetch_omdb' in request.form or 'fetch_omdb_flag' in request.form:
-                # OMDb-API Call
                 title = request.form['name']
                 api_key = os.getenv('OMDB_API_KEY')
                 url = f'http://www.omdbapi.com/?t={title}&apikey={api_key}&type=movie&plot=short&r=json'
@@ -164,7 +163,6 @@ def add_movie(user_id):
                     error = 'Error with OMDb request.'
                 return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
             else:
-                # Validate year and rating fields
                 year = request.form['year']
                 rating = request.form['rating']
                 if not year or not rating:
@@ -204,7 +202,6 @@ def update_movie(user_id, movie_id):
     if not movie:
         return redirect(url_for('user_movies', user_id=user_id))
     poster_url = None
-    # OMDb-Poster holen
     OMDB_API_KEY = os.getenv('OMDB_API_KEY')
     if movie and movie.name:
         url = f'http://www.omdbapi.com/?t={movie.name}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
@@ -226,7 +223,6 @@ def update_movie(user_id, movie_id):
         }
         data_manager.update_movie(updated_movie)
         return redirect(url_for('user_movies', user_id=user_id))
-    # movie als dict, damit .poster im Template funktioniert
     movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
     movie_dict['poster'] = poster_url
     return render_template('edit_movie.html', movie=movie_dict, back_url=back_url)
@@ -278,6 +274,32 @@ def add_review(movie_id):
     users = data_manager.get_all_users()
     return render_template('add_review.html', movie_id=movie_id, users=users, error=error, back_url=back_url)
 
+@app.route('/autocomplete_movie_title')
+def autocomplete_movie_title():
+    """
+    Return a list of up to 10 movie titles and posters from OMDb that match the query (for autocomplete).
+    Query param: q (the search string)
+    Returns: JSON list of dicts with 'title' and 'poster'
+    """
+    import json
+    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
+    query = request.args.get('q', '').strip()
+    results = []
+    if query and len(query) > 0:
+        url = f'http://www.omdbapi.com/?s={query}&apikey={OMDB_API_KEY}&type=movie'
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                data = r.json()
+                if data.get('Response') == 'True' and 'Search' in data:
+                    for movie in data['Search'][:10]:
+                        title = movie.get('Title', '')
+                        poster = movie.get('Poster', '')
+                        results.append({'title': title, 'poster': poster})
+        except Exception:
+            pass
+    return json.dumps(results)
+
 @app.errorhandler(404)
 def page_not_found(e):
     """
@@ -287,3 +309,4 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
+
