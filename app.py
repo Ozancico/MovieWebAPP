@@ -3,6 +3,7 @@ from datamanager.sqlite_data_manager import SQLiteDataManager
 import requests
 import os
 from dotenv import load_dotenv
+import json
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
@@ -23,53 +24,55 @@ def home():
     Show the homepage with OMDb top-rated/trending movies (10 per page, pagination, 10 pages).
     """
     import math
-    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
     page = int(request.args.get('page', 1))
     users = data_manager.get_all_users()
-    trending_titles = [
-        'The Shawshank Redemption', 'The Godfather', 'The Dark Knight', 'Pulp Fiction',
-        'Forrest Gump', 'Inception', 'Fight Club', 'The Matrix', 'Goodfellas', 'The Lord of the Rings: The Return of the King',
-        'Interstellar', 'Se7en', 'The Silence of the Lambs', 'The Green Mile', 'Gladiator',
-        'The Prestige', 'The Departed', 'Whiplash', 'The Lion King', 'The Usual Suspects',
-        'Saving Private Ryan', 'Parasite', 'Joker', 'Avengers: Endgame', 'Back to the Future',
-        'The Pianist', 'Spirited Away', 'The Intouchables', 'The Wolf of Wall Street', 'Django Unchained',
-        'Memento', 'The Truman Show', 'The Grand Budapest Hotel', 'La La Land', 'The Social Network',
-        'The Imitation Game', 'The Revenant', 'Mad Max: Fury Road', 'The Hateful Eight', 'Birdman',
-        'Room', 'Spotlight', 'Moonlight', 'Arrival', 'Blade Runner 2049', 'Logan', 'Get Out',
-        'Three Billboards Outside Ebbing, Missouri', 'Lady Bird', 'Call Me by Your Name', 'Coco',
-        'A Star Is Born', 'Bohemian Rhapsody', 'Green Book', 'Roma', 'Once Upon a Time in Hollywood',
-        'Joker', '1917', 'Knives Out', 'Jojo Rabbit', 'Parasite', 'Ford v Ferrari', 'Marriage Story',
-        'Little Women', 'The Irishman', 'Soul', 'Tenet', 'Minari', 'Nomadland', 'Promising Young Woman',
-        'Sound of Metal', 'The Father', 'Another Round', 'The Trial of the Chicago 7', 'Palm Springs',
-        'The Invisible Man', 'Hamilton', 'Enola Holmes', 'The Midnight Sky', 'News of the World',
-        'The Dig', 'The White Tiger', 'Malcolm & Marie', 'The Mauritanian', 'The Mitchells vs. the Machines',
-        'Luca', 'No Time to Die', 'Dune', 'The French Dispatch', 'King Richard', 'West Side Story',
-        'Don’t Look Up', 'The Power of the Dog', 'Drive My Car', 'Belfast', 'CODA', 'Licorice Pizza',
-        'Nightmare Alley', 'The Lost Daughter', 'Tick, Tick... Boom!', 'The Hand of God', 'The Worst Person in the World'
-    ]
+    with open('trending_titles.json', 'r') as f:
+        trending_titles = json.load(f)
     per_page = 12
     total_pages = math.ceil(len(trending_titles) / per_page)
     start = (page - 1) * per_page
     end = start + per_page
     page_titles = trending_titles[start:end]
     omdb_movies = []
+    # Prüfe, ob der Film bereits in der DB ist, sonst OMDb-API
     for title in page_titles:
-        url = f'http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
-        try:
-            r = requests.get(url)
-            if r.status_code == 200:
-                data = r.json()
-                if data.get('Response') == 'True':
-                    omdb_movies.append({
-                        'name': data.get('Title', ''),
-                        'director': data.get('Director', ''),
-                        'year': data.get('Year', ''),
-                        'rating': data.get('imdbRating', ''),
-                        'poster': data.get('Poster', ''),
-                        'omdb_id': data.get('imdbID', '')
-                    })
-        except Exception:
-            pass
+        # Suche nach Film in der DB (egal welcher User)
+        db_movie = None
+        for user in users:
+            user_movies = data_manager.get_user_movies(user.id)
+            for m in user_movies:
+                if m.name.lower() == title.lower():
+                    db_movie = m
+                    break
+            if db_movie:
+                break
+        if db_movie and db_movie.omdb_poster:
+            omdb_movies.append({
+                'name': db_movie.name,
+                'director': db_movie.omdb_director or db_movie.director,
+                'year': db_movie.omdb_year or db_movie.year,
+                'rating': db_movie.omdb_rating or db_movie.rating,
+                'poster': db_movie.omdb_poster,
+                'omdb_id': None
+            })
+        else:
+            OMDB_API_KEY = os.getenv('OMDB_API_KEY')
+            url = f'http://www.omdbapi.com/?t={title}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
+            try:
+                r = requests.get(url)
+                if r.status_code == 200:
+                    data = r.json()
+                    if data.get('Response') == 'True':
+                        omdb_movies.append({
+                            'name': data.get('Title', ''),
+                            'director': data.get('Director', ''),
+                            'year': data.get('Year', ''),
+                            'rating': data.get('imdbRating', ''),
+                            'poster': data.get('Poster', ''),
+                            'omdb_id': data.get('imdbID', '')
+                        })
+            except Exception:
+                pass
     return render_template('home.html', omdb_movies=omdb_movies, users=users, page=page, total_pages=total_pages)
 
 @app.route('/users')
@@ -85,35 +88,16 @@ def user_movies(user_id):
     """
     Show the movie list of a user with OMDb info (poster, etc.) as on the homepage.
     """
-    import os
-    OMDB_API_KEY = os.getenv('OMDB_API_KEY')
     movies = data_manager.get_user_movies(user_id)
     movies_with_omdb = []
     for movie in movies:
-        poster = ''
-        director = movie.director
-        year = movie.year
-        rating = movie.rating
-        if movie.name:
-            url = f'http://www.omdbapi.com/?t={movie.name}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
-            try:
-                r = requests.get(url)
-                if r.status_code == 200:
-                    data = r.json()
-                    if data.get('Response') == 'True':
-                        poster = data.get('Poster', '')
-                        director = data.get('Director', director)
-                        year = data.get('Year', year)
-                        rating = data.get('imdbRating', rating)
-            except Exception:
-                pass
         movies_with_omdb.append({
             'id': movie.id,
             'name': movie.name,
-            'director': director,
-            'year': year,
-            'rating': rating,
-            'poster': poster
+            'director': movie.omdb_director or movie.director,
+            'year': movie.omdb_year or movie.year,
+            'rating': movie.omdb_rating or movie.rating,
+            'poster': movie.omdb_poster,
         })
     return render_template('movies.html', movies=movies_with_omdb, user_id=user_id)
 
@@ -124,7 +108,11 @@ def add_user():
     """
     if request.method == 'POST':
         name = request.form['name']
-        data_manager.add_user({'name': name})
+        user = data_manager.add_user({'name': name})
+        if user is None:
+            error = f"User '{name}' existiert bereits. Bitte wähle einen anderen Namen."
+            back_url = request.args.get('back') or session.get('last_url') or url_for('list_users')
+            return render_template('add_user.html', back_url=back_url, error=error)
         back_url = request.args.get('back') or session.get('last_url') or url_for('list_users')
         return redirect(back_url)
     back_url = request.args.get('back') or session.get('last_url') or url_for('list_users')
@@ -171,6 +159,13 @@ def add_movie(user_id):
                 try:
                     year = int(year)
                     rating = float(rating)
+                    current_year = 2025  # oder: datetime.now().year
+                    if not (1888 <= year <= current_year):
+                        error = f'Das Jahr muss zwischen 1888 und {current_year} liegen.'
+                        return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
+                    if not (0.0 <= rating <= 10.0):
+                        error = 'Die Bewertung muss zwischen 0 und 10 liegen.'
+                        return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
                 except ValueError:
                     error = 'Year must be an integer and rating must be a number.'
                     return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
@@ -181,7 +176,10 @@ def add_movie(user_id):
                     'rating': rating,
                     'user_id': user_id
                 }
-                data_manager.add_movie(movie)
+                result = data_manager.add_movie(movie)
+                if result is None:
+                    error = f"Der Film '{movie['name']}' ({year}) ist für diesen Nutzer bereits vorhanden."
+                    return render_template('add_movie.html', user_id=user_id, omdb_data=omdb_data, error=error, back_url=back_url)
                 return redirect(url_for('user_movies', user_id=user_id))
     except Exception as ex:
         error = f'Error: {str(ex)}'
@@ -214,12 +212,31 @@ def update_movie(user_id, movie_id):
         except Exception:
             pass
     if request.method == 'POST':
+        try:
+            year = int(request.form['year'])
+            rating = float(request.form['rating'])
+            current_year = 2025  # oder: datetime.now().year
+            if not (1888 <= year <= current_year):
+                error = f'Das Jahr muss zwischen 1888 und {current_year} liegen.'
+                movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
+                movie_dict['poster'] = poster_url
+                return render_template('edit_movie.html', movie=movie_dict, back_url=back_url, error=error)
+            if not (0.0 <= rating <= 10.0):
+                error = 'Die Bewertung muss zwischen 0 und 10 liegen.'
+                movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
+                movie_dict['poster'] = poster_url
+                return render_template('edit_movie.html', movie=movie_dict, back_url=back_url, error=error)
+        except ValueError:
+            error = 'Year must be an integer and rating must be a number.'
+            movie_dict = movie.__dict__ if hasattr(movie, '__dict__') else dict(movie)
+            movie_dict['poster'] = poster_url
+            return render_template('edit_movie.html', movie=movie_dict, back_url=back_url, error=error)
         updated_movie = {
             'id': movie_id,
             'name': request.form['name'],
             'director': request.form['director'],
-            'year': int(request.form['year']),
-            'rating': float(request.form['rating'])
+            'year': year,
+            'rating': rating
         }
         data_manager.update_movie(updated_movie)
         return redirect(url_for('user_movies', user_id=user_id))
@@ -300,6 +317,37 @@ def autocomplete_movie_title():
             pass
     return json.dumps(results)
 
+@app.route('/search')
+def search():
+    """
+    Suche nach Filmen in der Datenbank (Titel, Regisseur, Jahr). Falls keine Treffer, optional OMDb.
+    """
+    query = request.args.get('q', '').strip()
+    results = []
+    omdb_result = None
+    if query:
+        results = data_manager.search_movies(query)
+        if not results:
+            # Optional: OMDb-API abfragen, wenn keine lokalen Treffer
+            OMDB_API_KEY = os.getenv('OMDB_API_KEY')
+            url = f'http://www.omdbapi.com/?t={query}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json'
+            try:
+                r = requests.get(url)
+                if r.status_code == 200:
+                    data = r.json()
+                    if data.get('Response') == 'True':
+                        omdb_result = {
+                            'name': data.get('Title', ''),
+                            'director': data.get('Director', ''),
+                            'year': data.get('Year', ''),
+                            'rating': data.get('imdbRating', ''),
+                            'poster': data.get('Poster', ''),
+                            'omdb_id': data.get('imdbID', '')
+                        }
+            except Exception:
+                pass
+    return render_template('search_results.html', query=query, results=results, omdb_result=omdb_result)
+
 @app.errorhandler(404)
 def page_not_found(e):
     """
@@ -309,4 +357,3 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
-
