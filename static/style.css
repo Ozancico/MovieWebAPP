@@ -18,12 +18,14 @@ h1, h2, h3 {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1300px;
     margin: 2em auto;
     background: linear-gradient(120deg, #ffffff 80%, #eaf6fb 100%);
     padding: 2em;
     border-radius: 16px;
     box-shadow: 0 6px 32px rgba(44, 62, 80, 0.10), 0 1.5px 4px rgba(44,62,80,0.04);
+    position: relative;
+    z-index: 1;
 }
 
 a {
@@ -36,44 +38,93 @@ a:hover {
     text-decoration: underline;
 }
 
-button, input[type="submit"] {
+/* Modern, realistic button styles */
+button, input[type="submit"], .btn-action, a.btn-link {
     background: linear-gradient(90deg, #2980b9 0%, #6dd5fa 100%);
-    color: #fff;
+    color: #fff !important;
     border: none;
-    padding: 0.7em 1.5em;
-    border-radius: 6px;
+    padding: 0.32em 0.8em;
+    border-radius: 7px;
     cursor: pointer;
-    font-size: 1.1em;
-    margin-top: 0.5em;
-    box-shadow: 0 2px 8px rgba(41,128,185,0.10);
-    transition: background 0.3s, transform 0.2s, box-shadow 0.2s;
+    font-size: 0.78em;
+    font-weight: 700;
+    margin-top: 0.3em;
+    margin-right: 0.3em;
+    box-shadow: 0 4px 18px 0 rgba(41,128,185,0.18), 0 1.5px 4px rgba(44,62,80,0.08);
+    transition: background 0.25s, transform 0.18s, box-shadow 0.18s, color 0.18s;
+    text-decoration: none;
+    display: inline-block;
+    letter-spacing: 0.04em;
+    outline: none;
+    border-bottom: 2px solid #217dbb;
+    position: relative;
+    overflow: hidden;
 }
-button:hover, input[type="submit"]:hover {
+button:active, input[type="submit"]:active, .btn-action:active, a.btn-link:active {
+    transform: scale(0.97) translateY(2px);
+    box-shadow: 0 2px 8px rgba(41,128,185,0.10);
+    border-bottom: 2px solid #217dbb;
+}
+button:hover, input[type="submit"]:hover, .btn-action:hover, a.btn-link:hover {
     background: linear-gradient(90deg, #1a5a7a 0%, #43cea2 100%);
+    color: #fff !important;
     transform: translateY(-2px) scale(1.04);
-    box-shadow: 0 6px 16px rgba(41,128,185,0.18);
+    box-shadow: 0 10px 32px 0 rgba(41,128,185,0.22);
+    border-bottom: 4px solid #1a5a7a;
 }
 
-.btn-action {
+/* Ripple effect for buttons */
+button::after, input[type="submit"]::after, .btn-action::after, a.btn-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255,255,255,0.25);
+    border-radius: 100%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1), height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.4s;
+}
+button:active::after, input[type="submit"]:active::after, .btn-action:active::after, a.btn-link:active::after {
+    width: 220%;
+    height: 220%;
+    opacity: 0.25;
+    transition: 0s;
+}
+
+/* Table action links as buttons */
+td a {
+    padding: 0.5em 1.3em;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%);
+    color: #2980b9;
+    font-weight: 600;
+    margin-right: 0.3em;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    text-decoration: none;
+    border: 1.5px solid #e0eafc;
+    box-shadow: 0 2px 8px rgba(41,128,185,0.07);
+    position: relative;
+}
+td a:hover {
     background: linear-gradient(90deg, #2980b9 0%, #6dd5fa 100%);
     color: #fff;
-    border: 2px solid #2980b9;
-    border-radius: 8px;
-    padding: 0.8em 2em;
-    font-size: 1.15em;
-    font-weight: 600;
-    box-shadow: 0 4px 16px rgba(41,128,185,0.18), 0 1.5px 4px rgba(44,62,80,0.04);
-    transition: background 0.3s, transform 0.2s, box-shadow 0.2s, border 0.2s;
-    margin-right: 0.5em;
-    margin-top: 1em;
-    letter-spacing: 0.03em;
+    border: 1.5px solid #2980b9;
+    box-shadow: 0 8px 24px rgba(41,128,185,0.18);
 }
-.btn-action:hover, .btn-action:focus {
-    background: linear-gradient(90deg, #1a5a7a 0%, #43cea2 100%);
-    border-color: #1a5a7a;
-    transform: translateY(-2px) scale(1.06);
-    box-shadow: 0 8px 24px rgba(41,128,185,0.22);
-    outline: none;
+
+button, input[type="submit"], .btn-action, a.btn-link {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.5em;
+}
+td a {
+    display: block;
+    margin-bottom: 0.5em;
+    width: 100%;
 }
 
 form div {
@@ -89,23 +140,54 @@ table {
     border-collapse: collapse;
     margin-bottom: 1em;
     background: #fff;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(44,62,80,0.06);
+    box-shadow: 0 2px 12px rgba(44,62,80,0.10);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-size: 1.08em;
+    letter-spacing: 0.01em;
 }
 th, td {
-    border: 1px solid #e0eafc;
-    padding: 0.7em 1em;
+    border: none;
+    padding: 1.1em 1.2em;
     text-align: left;
+    font-weight: 500;
+    color: #22304a;
 }
 th {
-    background: #eaf1f7;
+    background: linear-gradient(90deg, #eaf1f7 0%, #f6fbff 100%);
+    font-size: 1.13em;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #1a5a7a;
+    text-shadow: 0 1px 0 #fff;
+    border-bottom: 2px solid #e0eafc;
 }
-tr:nth-child(even) {
+td {
+    background: #fafdff;
+    font-size: 1.07em;
+    font-weight: 500;
+    color: #22304a;
+    border-bottom: 1.5px solid #e0eafc;
+    vertical-align: middle;
+}
+tr:last-child td {
+    border-bottom: none;
+}
+tr:nth-child(even) td {
     background: #f6fbff;
 }
-tr:nth-child(odd) {
+tr:nth-child(odd) td {
     background: #ffffff;
+}
+
+/* Modern movie title style */
+td:first-child {
+    font-size: 1.18em;
+    font-weight: 700;
+    color: #2980b9;
+    letter-spacing: 0.03em;
+    text-shadow: 0 1px 0 #eaf6fb;
 }
 
 .error {
@@ -128,16 +210,45 @@ tr:nth-child(odd) {
     box-shadow: 0 2px 8px rgba(39,174,96,0.10);
 }
 
+.btn-action {
+    display: inline-block;
+    padding: 0.5em 1.8em;
+    background: linear-gradient(90deg, #2980b9 0%, #6dd5fa 100%);
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: background 0.2s;
+    border: none;
+    margin: 0 0.3em;
+    min-width: 120px;
+    text-align: center;
+    box-shadow: 0 4px 18px 0 rgba(41,128,185,0.18), 0 1.5px 4px rgba(44,62,80,0.08);
+}
+.btn-action:hover {
+    background: linear-gradient(90deg, #1a5a7a 0%, #43cea2 100%);
+    color: #fff;
+}
+
+.btn-action.movie-action {
+    min-width: 140px;
+    max-width: 180px;
+    padding: 0.5em 1.2em;
+    font-size: 1em;
+}
+
+.btn-wide {
+    min-width: 120px;
+    padding: 0.5em 1.5em;
+    font-size: 1.05em;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 1em;
     }
     table, thead, tbody, th, td, tr {
-        display: block;
-        width: 100%;
-    }
-    th, td {
-        box-sizing: border-box;
-        padding: 0.7em 0.5em;
+        font-size: 1em;
     }
 }
