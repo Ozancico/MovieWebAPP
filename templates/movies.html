@@ -6,37 +6,35 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <div class="container" style="text-align: center;">
         <h1>Movie List</h1>
+        <nav style="display: flex; justify-content: space-between; margin: 2em 0;">
+            <a href="/users" class="btn-action">Back to User List</a>
+            <a href="{{ url_for('add_movie', user_id=user_id) }}" class="btn-action">Add New Movie</a>
+        </nav>
         {% if movies %}
-        <table>
-            <tr>
-                <th>Title</th>
-                <th>Director</th>
-                <th>Year</th>
-                <th>Rating</th>
-                <th>Actions</th>
-            </tr>
+        <h2 style="margin-top: 2em;">Your Movies</h2>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 2em;">
             {% for movie in movies %}
-            <tr>
-                <td>{{ movie.name }}</td>
-                <td>{{ movie.director }}</td>
-                <td>{{ movie.year }}</td>
-                <td>{{ movie.rating }}</td>
-                <td>
-                    <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">Edit</a> |
-                    <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" onclick="return confirm('Are you sure?')">Delete</a> |
-                    <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}">Show Reviews</a>
-                </td>
-            </tr>
+                <div style="flex: 0 1 calc(33.333% - 2em); max-width: 340px; min-width: 220px; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); margin-bottom: 2em; padding: 1.2em 1em; display: flex; flex-direction: column; align-items: center; min-height: 520px; justify-content: space-between;">
+                    {% if movie.poster and movie.poster != 'N/A' %}
+                        <img src="{{ movie.poster }}" alt="Poster" style="width: 100%; max-width: 180px; height: 270px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-bottom: 1em;">
+                    {% endif %}
+                    <div style="font-size: 1.15em; font-weight: 700; margin-bottom: 0.3em; color: #2980b9; min-height: 2.6em; display: flex; align-items: center; text-align: center; word-break: break-word;">{{ movie.name }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Director: {{ movie.director }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Year: {{ movie.year }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.7em; color: #555;">Rating: {{ movie.rating }}</div>
+                    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.5em; margin-top: auto;">
+                        <a href="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;">Edit</a>
+                        <a href="{{ url_for('delete_movie', user_id=user_id, movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" class="btn-action movie-action" style="width: 100%; max-width: 180px;">Show Reviews</a>
+                    </div>
+                </div>
             {% endfor %}
-        </table>
+        </div>
         {% else %}
         <p>No movies available.</p>
         {% endif %}
-
-        <p><a href="{{ url_for('add_movie', user_id=user_id) }}">Add New Movie</a></p>
-        <p><a href="{{ url_for('list_users') }}">Back to User List</a></p>
     </div>
 </body>
 </html>
