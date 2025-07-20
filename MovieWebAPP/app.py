@@ -60,13 +60,13 @@ def home():
     end = start + per_page
     page_movies = all_movies[start:end]
     omdb_movies = []
-    for m in page_movies:
+    for movie in page_movies:
         omdb_movies.append({
-            'name': m.name,
-            'director': m.omdb_director or m.director,
-            'year': m.omdb_year or m.year,
-            'rating': m.omdb_rating or m.rating,
-            'poster': m.omdb_poster,
+            'name': movie.name,
+            'director': movie.omdb_director or movie.director,
+            'year': movie.omdb_year or movie.year,
+            'rating': movie.omdb_rating or movie.rating,
+            'poster': movie.omdb_poster,
             'omdb_id': None
         })
     return render_template(
