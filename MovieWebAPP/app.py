@@ -32,40 +32,44 @@ def home():
     """
     page = int(request.args.get('page', 1))
     users = data_manager.get_all_users()
-    try:
-        with open('trending_titles.json', 'r') as f:
-            trending_titles = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        trending_titles = []
+    # Initialisiere Trending-Titel in der DB, falls noch keine Filme vorhanden sind
+    all_movies = data_manager.get_all_movies()
+    if not all_movies:
+        try:
+            with open('trending_titles.json', 'r') as f:
+                trending_titles = json.load(f)
+            for title in trending_titles:
+                # Prüfe, ob der Film schon existiert (global, user_id=0)
+                exists = any(m.name.lower() == title.lower() for m in all_movies)
+                if not exists:
+                    data = fetch_omdb_data(title)
+                    if data:
+                        movie = {
+                            'name': data['name'],
+                            'director': data['director'],
+                            'year': data['year'],
+                            'rating': data['rating'],
+                            'user_id': 0  # globaler User für Trending-Titel
+                        }
+                        data_manager.add_movie(movie)
+            all_movies = data_manager.get_all_movies()
+        except Exception as e:
+            print(f"Error initializing trending titles: {e}")
     per_page = 24
-    total_pages = math.ceil(len(trending_titles) / per_page) if trending_titles else 1
+    total_pages = math.ceil(len(all_movies) / per_page) if all_movies else 1
     start = (page - 1) * per_page
     end = start + per_page
-    page_titles = trending_titles[start:end]
+    page_movies = all_movies[start:end]
     omdb_movies = []
-    # Check if the movie is already in the DB, otherwise use OMDb API
-    for title in page_titles:
-        # Suche nach Film in der DB (global, nicht nach User gefiltert)
-        db_movie = None
-        # Hole alle Filme und suche nach exaktem Titel
-        all_movies = data_manager.get_all_movies()
-        for m in all_movies:
-            if m.name.lower() == title.lower():
-                db_movie = m
-                break
-        if db_movie and db_movie.omdb_poster:
-            omdb_movies.append({
-                'name': db_movie.name,
-                'director': db_movie.omdb_director or db_movie.director,
-                'year': db_movie.omdb_year or db_movie.year,
-                'rating': db_movie.omdb_rating or db_movie.rating,
-                'poster': db_movie.omdb_poster,
-                'omdb_id': None
-            })
-        else:
-            data = fetch_omdb_data(title)
-            if data:
-                omdb_movies.append(data)
+    for m in page_movies:
+        omdb_movies.append({
+            'name': m.name,
+            'director': m.omdb_director or m.director,
+            'year': m.omdb_year or m.year,
+            'rating': m.omdb_rating or m.rating,
+            'poster': m.omdb_poster,
+            'omdb_id': None
+        })
     return render_template(
         'home.html',
         omdb_movies=omdb_movies,
