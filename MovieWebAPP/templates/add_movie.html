@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Movie - MovieWeb App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+    // Best-practice: Only validate required fields on 'Add Movie', not on 'Fetch from OMDb'
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const fetchBtn = document.querySelector('button[name="fetch_omdb"]');
+        if (fetchBtn) {
+            fetchBtn.addEventListener('click', function(e) {
+                // Remove required attributes temporarily
+                const requiredFields = form.querySelectorAll('[required]');
+                requiredFields.forEach(f => f.removeAttribute('required'));
+                // Set a hidden field to indicate OMDb fetch
+                let hidden = form.querySelector('input[name="fetch_omdb_flag"]');
+                if (!hidden) {
+                    hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'fetch_omdb_flag';
+                    hidden.value = '1';
+                    form.appendChild(hidden);
+                }
+                // Submit the form
+                form.submit();
+                // Restore required attributes after submit (for next time)
+                setTimeout(() => requiredFields.forEach(f => f.setAttribute('required', 'required')), 100);
+                e.preventDefault();
+            });
+        }
+    });
+    </script>
+</head>
+<body>
+<div class="container" style="max-width: 480px; margin: 2em auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); padding: 2em 1.5em; display: flex; flex-direction: column; align-items: center; text-align: center;">
+    <h1 style="color: #2980b9; margin-bottom: 1.2em; text-align: center;">Add New Movie</h1>
+    {% if error %}
+        <div class="error" style="text-align: center;">{{ error }}</div>
+    {% endif %}
+    <form method="post" style="display: flex; flex-direction: column; gap: 1.2em; align-items: center; text-align: center; width: 100%; justify-content: center;">
+        <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; position: relative;">
+            <label for="name" style="display: block; font-weight: 600; color: #2980b9; font-size: 1.1em; margin-bottom: 0.3em; letter-spacing: 0.02em; text-align: center;">Movie Title:</label>
+            <input type="text" id="name" name="name" value="{{ omdb_data.name if omdb_data else request.form.get('name', '') }}" required autocomplete="off" style="width: 100%; max-width: 340px; text-align: center; font-size: 1.08em; color: #22304a; background: #fafdff; border: 1.5px solid #e0eafc; border-radius: 7px; padding: 0.5em 0.7em; margin-bottom: 0.2em; box-shadow: 0 1px 4px rgba(44,62,80,0.04);">
+            <ul id="autocomplete-list" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 10; background: #fff; border: 1px solid #e0eafc; border-radius: 0 0 7px 7px; max-height: 220px; overflow-y: auto; width: 100%; display: none; margin: 0; padding: 0; list-style: none;"></ul>
+        </div>
+        <div style="width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center;">
+            <label for="director" style="display: block; font-weight: 600; color: #2980b9; font-size: 1.1em; margin-bottom: 0.3em; letter-spacing: 0.02em; text-align: center;">Regie:</label>
+            <input type="text" id="director" name="director" value="{{ omdb_data.director if omdb_data else request.form.get('director', '') }}" required style="width: 100%; max-width: 340px; text-align: center; font-size: 1.08em; color: #22304a; background: #fafdff; border: 1.5px solid #e0eafc; border-radius: 7px; padding: 0.5em 0.7em; margin-bottom: 0.2em; box-shadow: 0 1px 4px rgba(44,62,80,0.04);">
+            {% if omdb_data is not none and (omdb_data.director is none or omdb_data.director == '') %}
+                <div class="error" style="text-align: center;">No director found from OMDb. Please enter the director manually.</div>
+            {% endif %}
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; gap: 1.5em; align-items: flex-end;">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <label for="year" style="display: block; font-weight: 600; color: #2980b9; font-size: 1.1em; margin-bottom: 0.3em; letter-spacing: 0.02em; text-align: center;">Year:</label>
+                <div style="width: 140px; display: flex; align-items: center; justify-content: center;">
+                    <input type="number" id="year" name="year" value="{{ omdb_data.year if omdb_data else request.form.get('year', '') }}" required min="1900" max="2099" style="width: 100%; text-align: center; font-size: 1.08em; color: #22304a; background: #fafdff; border: 1.5px solid #e0eafc; border-radius: 7px; padding: 0.5em 0.7em; margin-bottom: 0.2em; box-shadow: 0 1px 4px rgba(44,62,80,0.04);">
+                </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                <label for="rating" style="display: block; font-weight: 600; color: #2980b9; font-size: 1.1em; margin-bottom: 0.3em; letter-spacing: 0.02em; text-align: center;">Rating:</label>
+                <div style="width: 140px; display: flex; align-items: center; justify-content: center;">
+                    <input type="number" id="rating" name="rating" value="{{ omdb_data.rating if omdb_data else request.form.get('rating', '') }}" required min="0" max="10" step="0.1" style="width: 100%; text-align: center; font-size: 1.08em; color: #22304a; background: #fafdff; border: 1.5px solid #e0eafc; border-radius: 7px; padding: 0.5em 0.7em; margin-bottom: 0.2em; box-shadow: 0 1px 4px rgba(44,62,80,0.04);">
+                </div>
+            </div>
+        </div>
+        <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; gap: 1em; align-items: flex-start;">
+            <button type="submit" name="add_movie" class="btn-action movie-action" style="width: 100%; max-width: 180px; min-width: 180px; height: 44px; margin: 0 auto; background: linear-gradient(90deg, #43cea2 0%, #2980b9 100%);">Add Movie</button>
+            <button type="submit" name="fetch_omdb" class="btn-action movie-action" style="width: 100%; max-width: 180px; min-width: 180px; height: 44px; margin: 0 auto; background: linear-gradient(90deg, #43cea2 0%, #2980b9 100%);">Fetch from OMDb</button>
+        </div>
+        {% if omdb_data and omdb_data.poster %}
+        <div class="movie-cover-box" style="width: 100%; text-align: center; margin-top: 1em;">
+            <label style="font-weight: 600; color: #2980b9;">Filmcover:</label><br>
+            <img src="{{ omdb_data.poster }}" alt="Movie Cover" class="movie-cover-img" style="max-width: 160px; max-height: 240px; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-top: 0.5em;">
+        </div>
+        {% endif %}
+    </form>
+    <p style="margin-top: 1.5em; text-align: center;"><a href="{{ url_for('user_movies', user_id=user_id) }}">Back to Movie List</a></p>
+</div>
+<script>
+    // Autocomplete for Movie Title with poster
+    const nameInput = document.getElementById('name');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    let debounceTimeout;
+    nameInput.addEventListener('input', function() {
+        const query = this.value;
+        clearTimeout(debounceTimeout);
+        if (query.length > 0) {
+            debounceTimeout = setTimeout(() => {
+                fetch(`/autocomplete_movie_title?q=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        autocompleteList.innerHTML = '';
+                        if (data.length > 0) {
+                            autocompleteList.style.display = 'block';
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.style.display = 'flex';
+                                li.style.alignItems = 'center';
+                                li.style.padding = '0.5em 1em';
+                                li.style.cursor = 'pointer';
+                                if (item.poster && item.poster !== 'N/A') {
+                                    const img = document.createElement('img');
+                                    img.src = item.poster;
+                                    img.alt = 'Poster';
+                                    img.style.width = '32px';
+                                    img.style.height = '48px';
+                                    img.style.objectFit = 'cover';
+                                    img.style.borderRadius = '4px';
+                                    img.style.marginRight = '0.7em';
+                                    li.appendChild(img);
+                                }
+                                const span = document.createElement('span');
+                                span.textContent = item.title;
+                                li.appendChild(span);
+                                li.addEventListener('mousedown', function(e) {
+                                    nameInput.value = item.title;
+                                    autocompleteList.style.display = 'none';
+                                });
+                                autocompleteList.appendChild(li);
+                            });
+                        } else {
+                            autocompleteList.style.display = 'none';
+                        }
+                    });
+            }, 200);
+        } else {
+            autocompleteList.style.display = 'none';
+        }
+    });
+    document.addEventListener('click', function(e) {
+        if (!autocompleteList.contains(e.target) && e.target !== nameInput) {
+            autocompleteList.style.display = 'none';
+        }
+    });
+</script>
+</body>
+</html>
+

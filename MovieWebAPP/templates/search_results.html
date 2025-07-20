@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results - MovieWeb App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="container" style="max-width: 900px; margin: 2em auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); padding: 2em 1.5em;">
+    <h1 style="color: #2980b9; margin-bottom: 1.2em;">Search Results</h1>
+    <form method="get" action="/search" style="margin-bottom: 2em; display: flex; gap: 1em; position: relative;">
+        <input type="text" name="q" id="search-input" value="{{ query }}" placeholder="Search by title, director or year..." autocomplete="off" style="padding: 0.5em 1em; border-radius: 7px; border: 1.5px solid #e0eafc; min-width: 220px; font-size: 1.08em;">
+        <button type="submit" class="btn-action" style="padding: 0.5em 1.5em;">Search</button>
+        <div id="autocomplete-list" style="position: absolute; top: 2.8em; left: 0; right: 0; z-index: 10; background: #fff; border: 1px solid #e0eafc; border-radius: 0 0 7px 7px; max-height: 220px; overflow-y: auto; display: none;"></div>
+    </form>
+    <script>
+    const input = document.getElementById('search-input');
+    const list = document.getElementById('autocomplete-list');
+    input.addEventListener('input', function() {
+        const val = this.value;
+        if (val.length < 2) {
+            list.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        fetch(`/autocomplete_movie_title?q=${encodeURIComponent(val)}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length === 0) {
+                    list.style.display = 'none';
+                    list.innerHTML = '';
+                    return;
+                }
+                list.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.style.padding = '0.5em 1em';
+                    div.style.cursor = 'pointer';
+                    div.style.display = 'flex';
+                    div.style.alignItems = 'center';
+                    if (item.poster && item.poster !== 'N/A') {
+                        const img = document.createElement('img');
+                        img.src = item.poster;
+                        img.alt = 'Poster';
+                        img.style.width = '32px';
+                        img.style.height = '48px';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '4px';
+                        img.style.marginRight = '0.7em';
+                        div.appendChild(img);
+                    }
+                    const span = document.createElement('span');
+                    span.textContent = item.title;
+                    div.appendChild(span);
+                    div.addEventListener('mousedown', function(e) {
+                        // Case-insensitive fill
+                        input.value = item.title;
+                        list.style.display = 'none';
+                        list.innerHTML = '';
+                    });
+                    // Case-insensitive filter for display
+                    if (item.title.toLowerCase().includes(val.toLowerCase())) {
+                        list.appendChild(div);
+                    }
+                });
+                list.style.display = list.childElementCount > 0 ? 'block' : 'none';
+            });
+    });
+    document.addEventListener('click', function(e) {
+        if (!list.contains(e.target) && e.target !== input) {
+            list.style.display = 'none';
+            list.innerHTML = '';
+        }
+    });
+    </script>
+    {% if results and results|length > 0 %}
+        <h2>Found movies in your database:</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 2em;">
+            {% for movie in results %}
+                <div style="flex: 0 1 calc(33.333% - 2em); max-width: 340px; min-width: 220px; background: #fafdff; border-radius: 12px; box-shadow: 0 2px 12px rgba(44,62,80,0.10); margin-bottom: 2em; padding: 1.2em 1em; display: flex; flex-direction: column; align-items: center; min-height: 320px; justify-content: space-between;">
+                    {% if movie.omdb_poster %}
+                        <img src="{{ movie.omdb_poster }}" alt="Poster" style="width: 100%; max-width: 140px; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-bottom: 1em;">
+                    {% endif %}
+                    <div style="font-size: 1.15em; font-weight: 700; margin-bottom: 0.3em; color: #2980b9; min-height: 2.6em; display: flex; align-items: center; text-align: center; word-break: break-word;">{{ movie.name }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Director: {{ movie.omdb_director or movie.director }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Year: {{ movie.omdb_year or movie.year }}</div>
+                    <div style="font-size: 0.98em; margin-bottom: 0.7em; color: #555;">Rating: {{ movie.omdb_rating or movie.rating }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    {% elif omdb_result %}
+        <h2>No match in your database. OMDb result:</h2>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            {% if omdb_result.poster and omdb_result.poster != 'N/A' %}
+                <img src="{{ omdb_result.poster }}" alt="Poster" style="width: 100%; max-width: 140px; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(44,62,80,0.10); margin-bottom: 1em;">
+            {% endif %}
+            <div style="font-size: 1.15em; font-weight: 700; margin-bottom: 0.3em; color: #2980b9; min-height: 2.6em; display: flex; align-items: center; text-align: center; word-break: break-word;">{{ omdb_result.name }}</div>
+            <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Director: {{ omdb_result.director }}</div>
+            <div style="font-size: 0.98em; margin-bottom: 0.2em; color: #555;">Year: {{ omdb_result.year }}</div>
+            <div style="font-size: 0.98em; margin-bottom: 0.7em; color: #555;">Rating: {{ omdb_result.rating }}</div>
+        </div>
+    {% else %}
+        <h2>No movies found.</h2>
+    {% endif %}
+    <p style="margin-top: 2em;"><a href="/">Back to homepage</a></p>
+</div>
+</body>
+</html>
