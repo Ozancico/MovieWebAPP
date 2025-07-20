@@ -4,6 +4,7 @@ Utility functions for the MovieWebAPP.
 import os
 import requests
 from typing import Optional, Dict, Any
+import json
 
 
 def fetch_omdb_data(title: str) -> Optional[Dict[str, Any]]:
@@ -76,3 +77,20 @@ def get_back_url(request, session, default_url: str) -> str:
         str: Back URL
     """
     return request.args.get('back') or session.get('last_url') or default_url 
+
+
+def load_trending_titles(filename='trending_titles.json'):
+    """
+    Load trending movie titles from a JSON file.
+    Args:
+        filename (str): Path to the JSON file.
+    Returns:
+        list: List of trending movie titles (strings).
+    """
+    try:
+        with open(filename, 'r') as f:
+            trending_titles = json.load(f)
+        return trending_titles
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print(f"Error loading trending titles: {e}")
+        return [] 

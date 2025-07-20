@@ -5,7 +5,7 @@ import os
 import math
 import json
 from dotenv import load_dotenv
-from MovieWebAPP.utils import fetch_omdb_data, validate_movie_data, get_back_url
+from MovieWebAPP.utils import fetch_omdb_data, validate_movie_data, get_back_url, load_trending_titles
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'dev-secret-key')
@@ -36,8 +36,7 @@ def home():
     all_movies = data_manager.get_all_movies()
     if not all_movies:
         try:
-            with open('trending_titles.json', 'r') as f:
-                trending_titles = json.load(f)
+            trending_titles = load_trending_titles()
             for title in trending_titles:
                 # Prüfe, ob der Film schon existiert (global, user_id=0)
                 exists = any(m.name.lower() == title.lower() for m in all_movies)
