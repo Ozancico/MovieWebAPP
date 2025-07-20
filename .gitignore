@@ -1,5 +1,7 @@
 # ...existing code...
 .env
+.idea/
+.venv/
 # ...existing code...
 
 
