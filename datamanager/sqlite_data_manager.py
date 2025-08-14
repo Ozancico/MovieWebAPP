@@ -90,8 +90,7 @@ class SQLiteDataManager(DataManagerInterface):
             omdb_director = None
             omdb_year = None
             if OMDB_API_KEY:
-                url = f"http://www.omdbapi.com/?t={
-                    movie['name']}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json"
+                url = f"http://www.omdbapi.com/?t={movie['name']}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json"
                 try:
                     r = requests.get(url)
                     if r.status_code == 200:
@@ -143,8 +142,7 @@ class SQLiteDataManager(DataManagerInterface):
                 # OMDb-Daten aktualisieren
                 OMDB_API_KEY = os.getenv('OMDB_API_KEY')
                 if OMDB_API_KEY:
-                    url = f"http://www.omdbapi.com/?t={
-                        movie['name']}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json"
+                    url = f"http://www.omdbapi.com/?t={movie['name']}&apikey={OMDB_API_KEY}&type=movie&plot=short&r=json"
                     try:
                         r = requests.get(url)
                         if r.status_code == 200:

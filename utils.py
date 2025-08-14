@@ -3,6 +3,7 @@ Utility functions for the MovieWebAPP.
 """
 import os
 import requests
+import json
 from typing import Optional, Dict, Any
 
 
@@ -75,4 +76,19 @@ def get_back_url(request, session, default_url: str) -> str:
     Returns:
         str: Back URL
     """
-    return request.args.get('back') or session.get('last_url') or default_url 
+    return request.args.get('back') or session.get('last_url') or default_url
+
+
+def load_trending_titles() -> list[str]:
+    """
+    Load trending movie titles from JSON file.
+
+    Returns:
+        list[str]: List of trending movie titles
+    """
+    try:
+        with open('trending_titles.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            return data.get('titles', [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
